@@ -59,8 +59,6 @@ const questions=[
  {id:'property',group:'Seu imóvel',title:'Qual tipo de imóvel você deseja proteger hoje?',options:['Casa ou Sobrado Residencial','Empresa, Comércio ou Galpão (CNPJ)','Condomínio Residencial ou Comercial (Síndico / Administradora)','Chácara, Sítio ou Área Rural']},
  {id:'situation',group:'Sua segurança hoje',title:'Você já possui algum sistema de segurança ou empresa no local?',options:['Não tenho nada instalado ainda.','Tenho equipamentos próprios, mas NÃO são monitorados 24h.','Já tenho empresa de monitoramento, mas estou insatisfeito com o serviço/preço.']},
  {id:'urgency',group:'Prazo do projeto',title:'Qual é o prazo em que você pretende implementar essa solução?',options:['Com urgência (mudei recentemente, estou em obra ou tive um incidente)','Nas próximas 2 a 3 semanas','Apenas pesquisando para um projeto futuro']},
- {id:'owner',group:'Decisão sobre o imóvel',title:'Você é o proprietário ou tomador de decisão do imóvel?',options:['Sim','Não']},
- {id:'location',group:'Localização do imóvel',title:'Onde fica o imóvel?',desc:'Informe o bairro e a cidade do imóvel que você deseja proteger.',label:'Bairro e cidade do imóvel',placeholder:'Ex.: Centro, Vitória de Santo Antão',autocomplete:'off'},
  {id:'name',group:'Seus dados de contato',title:'Como podemos chamar você?',desc:'',label:'Nome completo',placeholder:'Digite seu nome completo',autocomplete:'name'},
  {id:'phone',group:'Seus dados de contato',title:'Qual é o seu WhatsApp com DDD para enviarmos a estimativa do seu diagnóstico?',desc:'',label:'WhatsApp com DDD',placeholder:'(51) 99999-9999',autocomplete:'tel-national',type:'tel'}
 ];
@@ -69,7 +67,7 @@ const main=document.getElementById('main'),back=document.getElementById('back');
 function esc(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function focusTitle(){main.querySelector('h1,h2')?.focus({preventScroll:true});window.scrollTo({top:0,behavior:'instant'});}
 // Uma visualização por etapa: a diferença entre uma etapa e a seguinte mostra onde o lead desiste.
-const ETAPAS_PIXEL={property:'ViuEtapa1_Imovel',situation:'ViuEtapa2_Situacao',urgency:'ViuEtapa3_Prazo',owner:'ViuEtapa4_Decisor',location:'ViuEtapa5_Localizacao',name:'ViuEtapa6_Nome',phone:'ViuEtapa7_WhatsApp'};
+const ETAPAS_PIXEL={property:'ViuEtapa1_Imovel',situation:'ViuEtapa2_Situacao',urgency:'ViuEtapa3_Prazo',name:'ViuEtapa6_Nome',phone:'ViuEtapa7_WhatsApp'};
 function render(){
  clearTimeout(autoAdvanceTimer);autoAdvanceTimer=null;
  const finished=step===questions.length,active=step>=0;
@@ -80,7 +78,7 @@ function render(){
  document.getElementById('fill').style.width=(completed/questions.length*100)+'%';
  document.querySelector('[role=progressbar]').setAttribute('aria-valuenow',completed);
  if(finished){
- const rows=[['Nome','name'],['WhatsApp','phone'],['Localização','location'],['Decisor','owner'],['Imóvel','property'],['Situação atual','situation'],['Prazo','urgency']];
+ const rows=[['Nome','name'],['WhatsApp','phone'],['Imóvel','property'],['Situação atual','situation'],['Prazo','urgency']];
  const message='Olá, Security Plus! Concluí o diagnóstico de segurança e gostaria de receber uma estimativa de projeto.\n\n'+rows.map(([label,id])=>label+': '+answers[id]).join('\n');
  const whatsappLink=(WHATSAPP_NUMERO ? 'https://wa.me/'+WHATSAPP_NUMERO : 'https://wa.me/')+'?text='+encodeURIComponent(message);
  const leadPhoneDigits=(answers.phone||'').replace(/\D/g,'');
@@ -91,7 +89,7 @@ function render(){
  const fbcCookie=(document.cookie.match(/_fbc=([^;]+)/)||[])[1];
  const fbc=fbcCookie||(fbclid?('fb.1.'+Date.now()+'.'+fbclid):'');
  if(window.fbq)fbq('track','Lead',{content_name:answers.property,content_category:answers.situation},{eventID:eventId});
- if(PLANILHA_WEBHOOK){fetch(PLANILHA_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({name:answers.name,phone:answers.phone,location:answers.location,owner:answers.owner,property:answers.property,situation:answers.situation,urgency:answers.urgency,whatsappLink:leadWhatsappLink,eventId,fbp,fbc,userAgent:navigator.userAgent,pageUrl:location.href})}).catch(()=>{});}
+ if(PLANILHA_WEBHOOK){fetch(PLANILHA_WEBHOOK,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({name:answers.name,phone:answers.phone,property:answers.property,situation:answers.situation,urgency:answers.urgency,whatsappLink:leadWhatsappLink,eventId,fbp,fbc,userAgent:navigator.userAgent,pageUrl:location.href})}).catch(()=>{});}
  main.innerHTML=`<section class="screen thanks"><div class="success" aria-hidden="true">✓</div><div class="eyebrow">Tudo pronto para o próximo passo</div><h1 tabindex="-1">Diagnóstico Concluído com Sucesso, <span>${esc(answers.name.trim().split(/\s+/)[0])}!</span> 🎉</h1><p class="desc">Analisamos as melhores opções de monitoramento para você ${esc(answers.name.trim().split(/\s+/)[0])}. Clique abaixo para receber sua estimativa de valores no WhatsApp com um dos nossos consultores de segurança.</p><a class="primary" id="whatsapp" href="${esc(whatsappLink)}" target="_blank" rel="noopener noreferrer">💬 Falar Agora com o Consultor no WhatsApp</a><p class="micro">O atendimento começa após você enviar a mensagem no WhatsApp.</p><div class="summary"><h3>CONFIRA SUAS RESPOSTAS</h3><dl>${rows.map(([label,id])=>`<div class="row"><dt>${label}</dt><dd>${esc(answers[id])}</dd></div>`).join('')}</dl></div><button class="restart" id="restart" type="button">Recomeçar diagnóstico</button></section>`;
  document.getElementById('whatsapp').onclick=()=>{if(window.fbq)fbq('track','Contact');};
  document.getElementById('restart').onclick=()=>{for(const key of Object.keys(answers))delete answers[key];step=0;render();};
@@ -106,7 +104,7 @@ function render(){
  focusTitle();
 }
 function selectOption(index){const q=questions[step];if(!q?.options?.[index])return;if(step===0&&window.fbq&&!window.__iniciouDisparado){window.__iniciouDisparado=true;fbq('trackCustom','IniciouDiagnostico');}answers[q.id]=q.options[index];main.querySelectorAll('.option').forEach((button,i)=>{button.setAttribute('aria-checked',i===index);button.tabIndex=i===index?0:-1;});document.getElementById('error').textContent='';clearTimeout(autoAdvanceTimer);const selectedStep=step;autoAdvanceTimer=setTimeout(()=>{autoAdvanceTimer=null;if(step===selectedStep)advance();},400);}
-function advance(){const q=questions[step];let value=(answers[q.id]||'').trim(),error='';if(!value)error=q.options?'Selecione uma opção para continuar.':'Preencha este campo para continuar.';else if(q.id==='phone'&&!/^[1-9]{2}\d{8,9}$/.test(value.replace(/\D/g,'')))error='Informe um número válido com DDD (10 ou 11 dígitos).';else if(q.id==='location'&&value.length<4)error='Informe o bairro e a cidade do imóvel.';if(error){document.getElementById('error').textContent=error;const input=document.getElementById('answer');if(input){input.setAttribute('aria-invalid','true');input.focus();}return;}answers[q.id]=value;if(q.id==='phone'&&window.fbq)fbq('trackCustom','EtapaWhatsApp');step++;render();}
+function advance(){const q=questions[step];let value=(answers[q.id]||'').trim(),error='';if(!value)error=q.options?'Selecione uma opção para continuar.':'Preencha este campo para continuar.';else if(q.id==='phone'&&!/^[1-9]{2}\d{8,9}$/.test(value.replace(/\D/g,'')))error='Informe um número válido com DDD (10 ou 11 dígitos).';if(error){document.getElementById('error').textContent=error;const input=document.getElementById('answer');if(input){input.setAttribute('aria-invalid','true');input.focus();}return;}answers[q.id]=value;if(q.id==='phone'&&window.fbq)fbq('trackCustom','EtapaWhatsApp');step++;render();}
 back.onclick=()=>{if(step>0){step--;render();}};
 document.addEventListener('keydown',event=>{if(event.ctrlKey||event.altKey||event.metaKey||event.target.matches('input,textarea'))return;const q=questions[step];if(q?.options){const key=event.key.toUpperCase();if(/^[A-D]$/.test(key)){const index=key.charCodeAt(0)-65;if(index<q.options.length){event.preventDefault();selectOption(index);main.querySelectorAll('.option')[index].focus();}}else if(['ArrowDown','ArrowRight','ArrowUp','ArrowLeft'].includes(event.key)){event.preventDefault();const current=q.options.indexOf(answers[q.id]);const index=(Math.max(current,0)+(['ArrowDown','ArrowRight'].includes(event.key)?1:-1)+q.options.length)%q.options.length;selectOption(index);main.querySelectorAll('.option')[index].focus();}else if(event.key==='Enter'&&!event.target.matches('.primary,.back')){event.preventDefault();advance();}}else if(event.key==='Enter'&&step===-1&&!event.target.matches('button')){event.preventDefault();step=0;render();}});
 render();
